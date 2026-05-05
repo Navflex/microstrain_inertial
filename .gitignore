@@ -41,3 +41,6 @@ api/manifest.yaml
 
 # Ignore the ROS generated CMakeLists.txt
 /CMakeLists.txt
+
+microstrain_inertial_msgs/msg
+microstrain_inertial_msgs/srv
