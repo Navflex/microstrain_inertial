@@ -76,6 +76,10 @@ endif()
 set(CMAKE_C_FLAGS "-Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-unused-variable -Wno-format -fno-builtin-memcpy")
 
 # Include the MIP SDK source
+# The MIP SDK defaults MICROSTRAIN_CMAKE_DEBUG to ON (upstream TODO: off by default),
+# which prints the C/C++ source+definition lists to stderr during configure. catkin
+# buckets any configure-time stderr under "Warnings", so force it off here.
+set(MICROSTRAIN_CMAKE_DEBUG OFF CACHE BOOL "" FORCE)
 add_subdirectory("${MIP_SDK_DIR}" EXCLUDE_FROM_ALL)
 include_directories("${MIP_SDK_SRC_DIR}")
 
