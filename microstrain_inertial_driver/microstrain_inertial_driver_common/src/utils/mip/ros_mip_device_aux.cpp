@@ -43,7 +43,7 @@ bool RosMipDeviceAux::configure(RosNodeType* config_node)
     MICROSTRAIN_MIP_SDK_ERROR(node_, mip_cmd_result, "Unable to read device info");
     return false;
   }
-  MICROSTRAIN_INFO(node_, R"(Aux Connection Info:
+  MICROSTRAIN_DEBUG(node_, R"(Aux Connection Info:
     #######################
     Model Name:       %s
     Serial Number:    %s

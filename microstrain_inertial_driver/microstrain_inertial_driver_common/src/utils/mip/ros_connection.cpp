@@ -100,7 +100,7 @@ bool RosConnection::connect(RosNodeType* config_node, const std::string& port, c
   // If the raw file is enabled, use a different connection type
   try
   {
-    MICROSTRAIN_INFO(node_, "Attempting to open serial port <%s> at <%d>", port.c_str(), baudrate);
+    MICROSTRAIN_DEBUG(node_, "Attempting to open serial port <%s> at <%d>", port.c_str(), baudrate);
     connection_ = std::unique_ptr<RecordingSerialConnection>(new RecordingSerialConnection(&record_file_, nullptr, port, baudrate));
   }
   catch (const std::exception& e)

@@ -45,13 +45,13 @@ bool RosMipDeviceMain::configure(RosNodeType* config_node)
   // At this point, we have connected to the device but if it is streaming.
   // Reading information may fail. Retry setting to idle a few times to accomodate
   bool changed_baud = false;
-  MICROSTRAIN_INFO(node_, "Setting device to idle in order to configure");
+  MICROSTRAIN_DEBUG(node_, "Setting device to idle in order to configure");
   if (!(mip_cmd_result = forceIdle()))
   {
     // If the device is not idle, we may have the wrong baudrate, so figure out the right one, configure it, and then switch back
     if (set_baud)
     {
-      MICROSTRAIN_INFO(node_, "Note: Attempting to open device at different bauds to change the baudrate");
+      MICROSTRAIN_DEBUG(node_, "Note: Attempting to open device at different bauds to change the baudrate");
       for (const uint32_t baud : {115200, 921600, 460800, 230400, 19200, 9600})
       {
         if (baud != baudrate)
@@ -65,7 +65,7 @@ bool RosMipDeviceMain::configure(RosNodeType* config_node)
           if (!!(mip_cmd_result = forceIdle()))
           {
             // Looks like we got the right baudrate, so break out of the loop and let it get changed below
-            MICROSTRAIN_INFO(node_, "Note: Device was previously configured at %d baud", baud);
+            MICROSTRAIN_DEBUG(node_, "Note: Device was previously configured at %d baud", baud);
             changed_baud = true;
             break;
           }
@@ -86,7 +86,7 @@ bool RosMipDeviceMain::configure(RosNodeType* config_node)
   if (set_baud)
   {
     // Set the baud rate
-    MICROSTRAIN_INFO(node_, "Note: Setting UART baudrate to %d", baudrate);
+    MICROSTRAIN_DEBUG(node_, "Note: Setting UART baudrate to %d", baudrate);
     if (!(mip_cmd_result = writeBaudRate(baudrate, 1)))
     {
       MICROSTRAIN_MIP_SDK_ERROR(node_, mip_cmd_result, "Failed to set baud rate");
@@ -111,7 +111,7 @@ bool RosMipDeviceMain::configure(RosNodeType* config_node)
     MICROSTRAIN_MIP_SDK_ERROR(node_, mip_cmd_result, "Unable to read device info");
     return false;
   }
-  MICROSTRAIN_INFO(node_, R"(Main Connection Info:
+  MICROSTRAIN_DEBUG(node_, R"(Main Connection Info:
     #######################
     Model Name:       %s
     Serial Number:    %s

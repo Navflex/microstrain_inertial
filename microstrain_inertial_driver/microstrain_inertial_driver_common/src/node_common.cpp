@@ -196,7 +196,7 @@ bool NodeCommon::configure(RosNodeType* config_node)
   timer_update_rate_hz_ = std::min(2 * max_rate, 2000);
   if (timer_update_rate_hz_ <= 100)
     timer_update_rate_hz_ = 100.0;
-  MICROSTRAIN_INFO(node_, "Setting spin rate to <%f> hz", timer_update_rate_hz_);
+  MICROSTRAIN_DEBUG(node_, "Setting spin rate to <%f> hz", timer_update_rate_hz_);
 
   // Save the config node for later
   config_node_ = config_node;
