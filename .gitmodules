@@ -1,9 +1,0 @@
-[submodule "microstrain_inertial_rqt/microstrain_inertial_rqt_common"]
-	path = microstrain_inertial_rqt/microstrain_inertial_rqt_common
-	url = https://github.com/LORD-MicroStrain/microstrain_inertial_rqt_common.git
-[submodule "external_msgs/nmea_msgs"]
-	path = external_msgs/nmea_msgs
-	url = https://github.com/ros-drivers/nmea_msgs.git
-[submodule "external_msgs/rtcm_msgs"]
-	path = external_msgs/rtcm_msgs
-	url = https://github.com/tilk/rtcm_msgs.git
