@@ -36,7 +36,7 @@ if(MIP_LOGGING_MAX_LEVEL)
     if(NOT "${MIP_LOGGING_MAX_LEVEL}" MATCHES "^MICROSTRAIN_LOGGING_LEVEL_OFF_$" AND NOT "${MIP_LOGGING_MAX_LEVEL}" MATCHES "^0$")
         set(MIP_LOGGING_ENABLED ON)
 
-        message("MIP logging is enabled. Max level = '${MIP_LOGGING_MAX_LEVEL}'")
+        message(STATUS "MIP logging is enabled. Max level = '${MIP_LOGGING_MAX_LEVEL}'")
     endif()
 endif()
 

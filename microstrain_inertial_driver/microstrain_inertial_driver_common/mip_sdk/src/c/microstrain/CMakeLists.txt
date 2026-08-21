@@ -13,7 +13,7 @@ if(MICROSTRAIN_LOGGING_MAX_LEVEL)
     if(NOT "${MICROSTRAIN_LOGGING_MAX_LEVEL}" MATCHES "^MICROSTRAIN_LOGGING_LEVEL_OFF_$" AND NOT "${MICROSTRAIN_LOGGING_MAX_LEVEL}" MATCHES "^0$")
         set(MICROSTRAIN_LOGGING_ENABLED ON)
 
-        message("MicroStrain logging is enabled. Max level = '${MICROSTRAIN_LOGGING_MAX_LEVEL}'")
+        message(STATUS "MicroStrain logging is enabled. Max level = '${MICROSTRAIN_LOGGING_MAX_LEVEL}'")
     endif()
 endif()
 
