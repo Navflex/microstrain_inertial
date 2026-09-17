@@ -1,0 +1,123 @@
+# Ruff configuration file
+# This replaces flake8, black, and isort with a single, faster tool
+
+# Target Python version — Noetic runtime is Python 3.8 (matches CI).
+# Keep at py38 so pyupgrade (UP) never rewrites to 3.9-only syntax
+# (e.g. `list[int]` annotations) that would break at runtime.
+target-version = "py312"
+
+# Line length — 120, matching the C++ ColumnLimit in .clang-format: one limit
+# across the stack. Robotics frame names (base_link__Y__0, ransac__trailer_...)
+# blow 100 constantly, and 120 still fits side-by-side diffs on the org's
+# 16" laptops and 27" monitors.
+line-length = 120
+
+# First-party = whatever lives in this repo's own source roots — resolved
+# generically (top-level `src` setting), so this canonical file needs NO
+# per-repo package list; a hardcoded known-first-party name broke import
+# grouping in every repo whose package was not called that. `scripts` is in
+# the list because catkin packages install their python module from there
+# (`package_dir={"": "scripts"}` in setup.py) — without it those repos' own
+# packages resolve as third-party.
+src = [".", "src", "scripts"]
+
+# Exclude patterns
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "*.egg-info",
+    "devel",
+    "install",
+]
+
+# Linting options
+[lint]
+# Enable common rules
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify — collapsible ifs, needless else/return, dict.get
+    "PIE", # flake8-pie — unnecessary pass / spread / duplicate class fields
+    "PERF",# perflint — list-building loops that should be comprehensions
+    "RUF", # ruff-native — mutable defaults, implicit optional, unused noqa
+    "PLE", # pylint errors — genuinely broken code (bad str format, nonlocal misuse)
+    "PLW", # pylint warnings — global statement, redefined loop var, useless else
+]
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Ignore specific rules
+ignore = [
+    "E203",  # whitespace before ':'
+    "E501",  # line too long (handled by line-length)
+    # F401 (unused imports) is NOT globally ignored — only per-file for
+    # __init__.py (see [lint.per-file-ignores] below).
+    # -- Python 3.8 (ROS Noetic) runtime guards -------------------------------
+    # PEP 585/604 syntax in EVALUATED annotations (pydantic models, dataclass
+    # fields, complex targets like `self.x:`) raises TypeError at runtime on
+    # py38, so these pyupgrade fixes are invalid here. Re-enable all four when
+    # the stack moves to ROS 2 / Python >= 3.10.
+    "UP006",  # typing.List -> list
+    "UP045",  # typing.Optional[X] -> X | None
+    "UP007",  # typing.Union[X, Y] -> X | Y (same runtime break as UP045)
+    "UP037",  # remove quotes from annotation (quotes ARE the py38 guard)
+    # -- ROS idiom / noise cuts for the newer groups -------------------------
+    "RUF012",  # mutable class attribute without ClassVar — every ROS node keeps its
+               # subscribers/params as class-level dicts; annotating them all is churn
+    "PLW2901", # loop variable overwritten in body — common, harmless, autofix-free
+    "SIM108",  # ternary instead of if/else — often less readable in callbacks
+    "PLW0603", # `global` statement — rospy callback scripts use it by design
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+
+# Per-file rule configurations
+[lint.per-file-ignores]
+# Ignore unused imports in every __init__.py (recursive glob matches subpackages)
+"**/__init__.py" = ["F401"]
+# ROS dynamic_reconfigure generator scripts: the documented upstream idiom is
+# `from ...parameter_generator_catkin import *` + names from that star import,
+# after the roslib bootstrap lines. Not ours to restructure.
+"*.cfg" = ["E402", "F403", "F405"]
+
+# Import sorting (replaces isort)
+[lint.isort]
+# ROS modules are generated/installed outside the repo tree — pin them
+# third-party explicitly so the resolver never guesses.
+known-third-party = [
+    "rospy",
+    "geometry_msgs",
+    "nav_msgs",
+    "std_msgs",
+    "tf2_ros",
+    "tf2_geometry_msgs",
+    "dynamic_reconfigure",
+    "costmap_2d",
+    "nav_core",
+    "base_local_planner",
+    "pluginlib",
+    "visualization_msgs",
+    "forklift_controller",
+    "forklift_msgs",
+]
+
+# Formatting options
+[format]
+# Like black, use double quotes for strings
+quote-style = "double"
+# Use spaces around operators
+indent-style = "space"
+# Skip magic trailing comma
+skip-magic-trailing-comma = false
+# Respect existing line endings
+line-ending = "auto"

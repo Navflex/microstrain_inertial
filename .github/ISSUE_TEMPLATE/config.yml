@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📋 ClickUp (tickets & planning)
+    url: https://app.clickup.com/
+    about: Feature work and planning live in ClickUp — open a ticket in the relevant list and link it here.
+  - name: 📚 Development Workflow (Confluence)
+    url: https://navflex.atlassian.net/wiki/spaces/NDT/pages/305758257/Development+Workflow
+    about: Internal engineering standards and workflows.
+  - name: 🔐 Security issue?
+    url: https://github.com/Navflex/.github/blob/main/.github/SECURITY.md
+    about: Never report vulnerabilities in issues — follow the security policy.

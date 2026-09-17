@@ -1,0 +1,49 @@
+# Canon dependabot config for ROS2 (jazzy / python 3.12) repos — stamped at
+# CI rollout, lives at .github/dependabot.yml in each repo. No pip ignore
+# ranges: the modern-python toolchain tracks upstream freely. The py3.8
+# ignore list lives only in the ROS1 variant (templates/dependabot.yml).
+version: 2
+updates:
+  # GitHub Actions — keep the pinned action versions current.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Conventional prefix — the org commit-style gate (commitizen) rejects
+    # dependabot's default capitalized "Build(deps):" subject.
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+  # Docker — base images in every Dockerfile (FROM tags / digests), any
+  # depth. Without this block a base image only moves when someone edits
+  # the file by hand. Dependabot reports a missing-manifest ecosystem as a
+  # failed job under Insights › Dependabot: drop the block in a repo with
+  # no Dockerfile. Compose `image:` pins need the separate "docker-compose"
+  # ecosystem — not added until the canon check-dependabot hook's schema
+  # knows it (the pinned check-jsonschema rejects the value today).
+  - package-ecosystem: "docker"
+    directories: ["**/*"]
+    schedule:
+      interval: "weekly"
+    # Conventional prefix — see the github-actions block above.
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+  # pip — CI toolchain pins in .github/requirements-ci.txt
+  - package-ecosystem: "pip"
+    directory: "/.github"
+    schedule:
+      interval: "weekly"
+    # Conventional prefix — see the github-actions block above.
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5

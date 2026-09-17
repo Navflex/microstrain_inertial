@@ -1,0 +1,37 @@
+name: 🐛 Bug report
+description: Something behaves incorrectly
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: clickup
+    attributes:
+      label: ClickUp ticket
+      description: Link the ClickUp ticket if one exists.
+      placeholder: https://app.clickup.com/t/...
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, what did you get instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Robot / simulation, branch or release, image tag, relevant configs.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Attach rosbags, log excerpts or screenshots. Long logs go in a collapsed block.

@@ -1,0 +1,18 @@
+# Local `act` defaults (read automatically from the repo root).
+# NOTE: act only reads lines starting with "-"; inline comments after a
+# flag are parsed as arguments, so keep flags on their own bare lines.
+#
+# Reuse containers / cached actions between runs:
+--reuse
+--pull=false
+--action-offline-mode
+# Jobs declare self-hosted labels; map every label to a runner image with
+# node+docker so act does not skip them (`-P label=image`, one per label):
+-P self-hosted=catthehacker/ubuntu:act-latest
+-P Linux=catthehacker/ubuntu:act-latest
+-P X64=catthehacker/ubuntu:act-latest
+-P fast=catthehacker/ubuntu:act-latest
+# git must fail instead of prompting for credentials when a secret is
+# missing (a prompt hangs act forever — private sibling clones need
+# `act -s GIT_CLONE_PAT=...`):
+--env GIT_TERMINAL_PROMPT=0

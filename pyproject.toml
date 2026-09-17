@@ -1,0 +1,77 @@
+# Ruff configuration is in ruff.toml
+# This file now only contains mypy configuration
+
+[tool.mypy]
+ignore_missing_imports = true   # ROS/msg modules rarely ship stubs — global, one source of truth
+python_version = "3.12"   # Jazzy runtime / CI Python version
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false   # untyped debug scripts exist; full typing tracked as debt
+disallow_incomplete_defs = false   # untyped debug scripts exist; full typing tracked as debt
+check_untyped_defs = true
+disallow_untyped_decorators = false   # untyped debug scripts exist; full typing tracked as debt
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "rospy.*",
+    "geometry_msgs.*",
+    "nav_msgs.*",
+    "std_msgs.*",
+    "tf2_ros.*",
+    "tf2_geometry_msgs.*",
+    "dynamic_reconfigure.*",
+    "costmap_2d.*",
+    "nav_core.*",
+    "base_local_planner.*",
+    "pluginlib.*",
+    "visualization_msgs.*",
+    "forklift_controller.*",
+    "forklift_msgs.*"
+]
+ignore_missing_imports = true
+
+# ROS 2 launch / lifecycle modules — no stubs, and the hook env has no
+# sourced workspace.
+[[tool.mypy.overrides]]
+module = ["launch", "launch.*", "launch_ros", "launch_ros.*", "ament_index_python.*", "lifecycle_msgs.*", "rclpy", "rclpy.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+# pyright configuration — copy this table into the repo's pyproject.toml
+# (pyright reads [tool.pyright] from pyproject.toml, or a pyrightconfig.json
+# at the repo root). Runs next to mypy (pyproject.mypy.toml): the two
+# checkers disagree on inference, and what one misses the other catches.
+# Keep the knobs aligned with the mypy canon so a finding is never
+# "pyright-only because of config".
+
+[tool.pyright]
+pythonVersion = "3.12"   # Jazzy runtime / CI Python version
+typeCheckingMode = "standard"   # "strict" is the mypy disallow_untyped_* debt — tracked, not gated
+# ROS / msg modules rarely ship stubs, and the pre-commit hook env is
+# isolated from the sourced ROS workspace — mirrors mypy's
+# ignore_missing_imports = true.
+reportMissingImports = false
+reportMissingModuleSource = false
+# Same knobs as mypy (warn_unused_ignores / warn_unreachable / strict_equality).
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryCast = "warning"
+# Build / workspace artefacts — never source.
+exclude = [
+    "**/__pycache__",
+    "**/.git",
+    "**/.mypy_cache",
+    "**/.ruff_cache",
+    "**/.pytest_cache",
+    "**/node_modules",
+    "build",
+    "install",
+    "log",
+    "devel",
+]

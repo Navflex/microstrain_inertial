@@ -1,0 +1,11 @@
+# Relaxed base: gate real YAML errors (duplicate keys, syntax) without
+# failing on legacy formatting. Style findings stay warnings.
+extends: relaxed
+rules:
+  key-duplicates: enable
+  line-length: disable
+  truthy:
+    # Overriding a rule resets its level — keep it a warning like the relaxed
+    # profile intends, or `Yes`/`No` in tool dialects turn the gate red.
+    level: warning
+    check-keys: false   # GitHub Actions `on:` is a key, not a truthy value

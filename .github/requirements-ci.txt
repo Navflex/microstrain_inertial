@@ -1,0 +1,24 @@
+# Pipeline toolchain — pinned deps for the org quality workflows (CI installs
+# them with `pip install -r .github/requirements-ci.txt`; repos with a Makefile
+# also get them via `make install`), watched by dependabot (pip ecosystem,
+# directory: /.github). Lives at .github/requirements-ci.txt. Keep py3.8-compatible: the quality workflow
+# runs these inside the noetic-base (focal) container.
+# NB: keep the pins alphabetical — the requirements-txt-fixer hook enforces it.
+catkin-lint==1.6.25
+# rebuild.py's manifest parser (condition evaluation); 1.1.0 is the version
+# validated in the noetic image against format-3 dual packages, py3.8-ok.
+catkin-pkg==1.1.0
+# Pinned binary wheel so the format verdict is host-independent
+# (apt ships v10 on focal, v22+ elsewhere).
+clang-format==22.1.8
+cmakelint==1.4.3
+# Transitive dep of catkin-lint, pinned here because it is the py3.8 floor:
+# lxml 6.1.3 (2026-09-02) ships no cp38 wheels, so pip falls back to the
+# sdist and the noetic-base (focal) container has no libxml2/libxslt headers.
+lxml==6.1.2
+mypy==1.14.1
+pre-commit==3.5.0        # last py3.8 line
+pyright==1.1.414         # node launcher wheel (py3.8-ok); fetches node via nodeenv
+ruff==0.16.5
+types-PyYAML==6.0.12.20241230
+vcstool==0.3.0

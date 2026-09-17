@@ -1,0 +1,10 @@
+---
+# Minimal, non-strict baseline so the clang-tidy pre-commit hook has a config.
+# Broaden checks over time; warnings are not errors in the CI hook.
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  -bugprone-easily-swappable-parameters
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'

@@ -1,0 +1,26 @@
+# Canon copy for consumer repos — stamp as .github/workflows/canon-sync.yml.
+# Daily restamp of the canon copies (tool configs + community health files)
+# from Navflex/.github; opens a draft PR when anything drifted.
+# ROS2 (jazzy) repos: set ruff-target: py312.
+name: Canon sync
+on:
+  schedule:
+    - cron: "17 6 * * *" # daily, 06:17 UTC
+  workflow_dispatch:
+permissions: {}
+jobs:
+  sync:
+    # A called workflow cannot elevate the caller's token — the sync job's
+    # branch push + PR creation need these grants on THIS job.
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: Navflex/.github/.github/workflows/canon-sync.yml@main
+    with:
+      ruff-target: py312
+    # only the secrets the sync declares — not the repo's whole set.
+    # CANON_SYNC_PAT (optional, repo write + PR) makes the sync PR's own
+    # CI run; without it GITHUB_TOKEN opens the PR with no checks.
+    secrets:
+      GIT_CLONE_PAT: ${{ secrets.GIT_CLONE_PAT }}
+      CANON_SYNC_PAT: ${{ secrets.CANON_SYNC_PAT }}

@@ -1,0 +1,80 @@
+name: CI
+
+# The single CI entry point for the ROS 2 port: triggers, concurrency and
+# draft-skip live here; every job comes from the org's reusable pipelines
+# (Navflex/.github).
+#
+# Vendored MicroStrain (HBK) inertial driver fork — driver, msgs,
+# description, examples, rqt, external_msgs; MIP SDK vendored under
+# microstrain_inertial_driver_common. The blocking gates stay diff-scoped,
+# so upstream style debt never reds a PR; the radars show it.
+#
+# Work happens off `ros2-jazzy`, not the repo default branch: the quality
+# gates diff against it explicitly (diff-base), and canon-sync.yml /
+# dependabot.yml stay inert until it becomes the default branch (GitHub
+# runs schedule + dependabot from the default branch only).
+
+on:
+  push:
+    branches: [ ros2-jazzy, 'release/**', 'integration/**' ]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ ros2-jazzy, 'release/**', 'integration/**' ]
+  schedule:
+    - cron: '0 2 * * *'          # nightly 02:00 UTC (valgrind gates itself on the event)
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cpp:
+    uses: Navflex/.github/.github/workflows/ros2-quality-cpp.yml@main
+    with:
+      diff-base: ros2-jazzy
+    secrets: inherit
+    permissions:
+      contents: read
+
+  ament:
+    # Native ament lint suite — informational radar.
+    uses: Navflex/.github/.github/workflows/ros2-ament-lint.yml@main
+    permissions:
+      contents: read
+
+  hooks:
+    uses: Navflex/.github/.github/workflows/ros2-quality-hooks.yml@main
+    with:
+      diff-base: ros2-jazzy
+    permissions:
+      contents: read
+    secrets:
+      GIT_CLONE_PAT: ${{ secrets.GIT_CLONE_PAT }}
+
+  security:
+    uses: Navflex/.github/.github/workflows/reusable-security.yml@main
+    permissions:
+      contents: read
+      actions: write          # prune-skipped-runs deletes run shells
+      security-events: write  # optional Security-tab SARIF push
+
+  build:
+    # Workspace mode (no `package`): build + test every package the repo
+    # carries, coverage over the whole tree.
+    uses: Navflex/.github/.github/workflows/ros2-build.yml@main
+    secrets: inherit
+    permissions:
+      contents: read
+
+  report:
+    if: ${{ always() && github.event_name == 'pull_request' && !contains(needs.*.result, 'cancelled') }}
+    needs: [cpp, ament, hooks, security, build]
+    uses: Navflex/.github/.github/workflows/ci-report.yml@main
+    permissions:
+      contents: read
+      actions: read           # download the ci-metrics artifacts
+      pull-requests: write    # the sticky comment

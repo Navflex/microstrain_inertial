@@ -1,0 +1,388 @@
+# On `git commit`: format / lint / type / security / schema hooks (fast).
+# On `git push`:  colcon build (heavy — the local `colcon-build` hook below).
+# Install both stages once:  pre-commit install --install-hooks
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
+
+# Hook pins are python-3.8-compatible: `make lint` must work both on the host
+# (py3.11) and inside the noetic container (py3.8). Newer majors of the pinned
+# repos require >= 3.9 — bump them together when the stack moves to ROS 2.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0   # last release supporting python 3.8 (the noetic container)
+    hooks:
+      - id: check-shebang-scripts-are-executable
+        name: check that scripts with shebangs are executable
+        description: ensures that (non-binary) files with a shebang are executable.
+        entry: check-shebang-scripts-are-executable
+        types: [text]
+      - id: check-executables-have-shebangs
+        name: check that executables have shebangs
+        description: ensures that (non-binary) executables have a shebang.
+        entry: check-executables-have-shebangs
+        types: [text, executable]
+      - id: pretty-format-json
+        name: pretty format json
+        description: sets a standard for formatting json files.
+        entry: pretty-format-json
+        types: [json]
+      - id: check-json
+        name: check json
+        description: checks json files for parseable syntax.
+        entry: check-json
+        types: [json]
+      - id: check-added-large-files
+        name: check for added large files
+        description: prevents giant files from being committed.
+        entry: check-added-large-files
+      - id: fix-byte-order-marker
+        name: fix-byte-order-marker
+        description: fix-byte-order-marker.
+      - id: check-case-conflict
+        name: check for case conflicts
+        description: checks for files that would conflict in case-insensitive filesystems.
+        entry: check-case-conflict
+      - id: check-docstring-first
+        name: check docstring is first
+        description: checks a common error of defining a docstring after code.
+        entry: check-docstring-first
+      - id: check-merge-conflict
+        name: check for merge conflicts
+        description: checks for files that contain merge conflict strings.
+        entry: check-merge-conflict
+      - id: check-symlinks
+        name: check for broken symlinks
+        description: checks for symlinks which do not point to anything.
+        entry: check-symlinks
+        types: [symlink]
+      - id: check-toml
+        name: check toml
+        description: checks toml files for parseable syntax.
+        entry: check-toml
+        types: [toml]
+      - id: check-vcs-permalinks
+        name: check vcs permalinks
+        description: ensures that links to vcs websites are permalinks.
+        entry: check-vcs-permalinks
+      - id: check-xml
+        name: check xml
+        description: checks xml files for parseable syntax.
+        entry: check-xml
+        types: [xml]
+      - id: check-yaml
+        name: check yaml
+        description: checks yaml files for parseable syntax.
+        entry: check-yaml
+        types: [yaml]
+        args: [--allow-multiple-documents]
+      - id: destroyed-symlinks
+        name: detect destroyed symlinks
+        description: detects symlinks which are changed to regular files with a content of a path which that symlink was pointing to.
+        entry: destroyed-symlinks
+      - id: detect-private-key
+        name: detect private key
+        description: detects the presence of private keys.
+        entry: detect-private-key
+      # NB: no double-quote-string-fixer — it rewrites to single quotes, which
+      # fights ruff-format (quote-style = "double" in ruff.toml).
+      - id: end-of-file-fixer
+        name: fix end of files
+        description: ensures that a file is either empty, or ends with one newline.
+        entry: end-of-file-fixer
+      - id: forbid-new-submodules
+        name: forbid new submodules
+        description: prevents addition of new git submodules.
+        entry: forbid-new-submodules
+        types: [directory]
+      - id: forbid-submodules
+        name: forbid submodules
+        description: forbids any submodules in the repository
+        language: fail
+        entry: "submodules are not allowed in this repository:"
+        types: [directory]
+      - id: mixed-line-ending
+        name: mixed line ending
+        description: replaces or checks mixed line ending.
+        entry: mixed-line-ending
+        args: [--fix=lf]
+      - id: sort-simple-yaml
+        name: sort simple yaml files
+        description: sorts simple yaml files which consist only of top-level keys, preserving comments and blocks.
+        entry: sort-simple-yaml
+        files: ^$
+      - id: debug-statements
+        name: debug statements (python)
+        description: fails on leftover pdb/breakpoint() calls.
+      - id: no-commit-to-branch
+        name: block commits to protected branches
+        # Local guard for the org rule "feature branches only". CI runs on
+        # develop pushes, so the hooks workflows SKIP this hook there.
+        args: [--branch, develop, --branch, main]
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        description: trims trailing whitespace.
+        entry: trailing-whitespace-fixer
+        # Two trailing spaces in Markdown are hard breaks — trimming them
+        # collapses the rendered layout; keep them in .md files.
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.28.6   # 0.29+ requires python >= 3.9
+    hooks:
+      - id: check-github-workflows
+        args: [--verbose]
+      - id: check-github-actions
+        args: [--verbose]
+      - id: check-dependabot
+        args: [--verbose]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1                        # last py3.8-compatible line
+    hooks:
+      - id: yamllint
+        # Config from the repo .yamllint (relaxed base): gates real YAML errors
+        # (duplicate keys, syntax) without failing on legacy style. LLVM-dialect
+        # configs (.clang-format/.clang-tidy: `Yes`, no doc marker) are not ours.
+        exclude: ^\.clang-(format|tidy)$
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6                         # last py3.8-compatible line
+    hooks:
+      - id: codespell
+        description: catches typos in code, comments and docs.
+        # PnP/solvePnP (OpenCV pose estimation) look like typos to the
+        # dictionary, and `fo` is a legitimate identifier in the navigation
+        # monitor's trace code (forks, alongside ch/ma/mr/ml). Neither is one.
+        args: [-L, "fo,pnp,PnP"]
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        description: flags credential-shaped strings (tokens, keys, passwords in URLs).
+        # `secrets: inherit` in caller workflows is GitHub syntax, not a credential.
+        args: [--exclude-lines, 'secrets:.*inherit']
+        exclude: (\.bag|\.pcd|\.dae)$
+
+  - repo: local
+    hooks:
+      # Local hook with a PyPI pin instead of the netromdk/vermin repo
+      # hook: pre-commit builds repo hooks from source, and the 1.8.0
+      # sdist needs setuptools>=80 at build time — unobtainable on the
+      # py3.8 (noetic) floor. The PyPI wheel installs everywhere; 1.8.0
+      # itself is required because 1.6.0 crashes on host pythons >= 3.12
+      # (uses the removed ast.Str).
+      - id: vermin
+        name: Check minimum Python version
+        language: python
+        additional_dependencies: [vermin==1.8.0]
+        types: [python]
+        # noetic floor — the toolchain must stay importable on python 3.8.
+        # Floor = the OLDEST python the repo still supports (a dual
+        # ROS1+ROS2 repo keeps 3.8 until noetic retires; a jazzy-only repo
+        # may bump to -t=3.12-). Not the target python — the floor is what
+        # catches syntax that would break the oldest supported lane.
+        # --eval-annotations: without it vermin is blind to PEP 585/604
+        # inside annotations (list[int] scores as "3.0") — signature
+        # annotations ARE evaluated at def-time on py3.8, so that class
+        # of break is real (the exact class that slipped past before).
+        entry: vermin -t=3.8- --violations --eval-annotations
+  # NB: no standalone isort hook — ruff (below) owns import sorting via its "I"
+  # rules (ruff.toml [lint.isort]); a separate isort would fight it.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5                        # keep in lockstep with ruff== in requirements-ci.txt
+    hooks:
+      - id: ruff # linter
+        args: [--fix]
+      - id: ruff-format # formatter
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1                        # matches the mypy version used in CI / the Makefile
+    hooks:
+      - id: mypy # static checker
+        # mypy behaviour comes from the repo's pyproject.toml when present; otherwise mypy defaults apply
+        additional_dependencies: [types-PyYAML==6.0.12.20241230]  # same pin as requirements-ci — the hook env is isolated  # yaml stubs — silences import-untyped in the isolated hook venv
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.414                       # keep in lockstep with pyright== in requirements-ci.txt
+    hooks:
+      - id: pyright # second static checker — pyright's inference catches what mypy's does not
+        # Config comes from the repo's pyproject.toml ([tool.pyright], canon:
+        # templates/pyproject.pyright.toml). The pip wheel is a node
+        # launcher: it fetches its own node through nodeenv on first run
+        # (network, same as the node-language hooks below), so nothing
+        # extra is needed in the container. Typeshed's third-party stubs
+        # (PyYAML included) ship inside pyright — no additional_dependencies.
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10   # bandit 1.8+ requires python >= 3.9
+    hooks:
+      - id: bandit # security issues checker
+        # Gate on HIGH-severity findings (no --exit-zero, which would never fail).
+        # Lower-severity debt is surfaced by running bandit manually and tracked
+        # in a ClickUp subtask, not hidden here.
+        args: [--severity-level, high]  # files come from pre-commit (diff in the gate, all in the radar)
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    # v0.46+ brings MD060 (table-column-style): mixed table styles now gate.
+    # Not autofixable at THIS pin (lib 0.40 emits no fixInfo; partial fixes
+    # land in lib 0.41 / cli v0.49). Pinned to v0.47.0, the newest
+    # line that still INSTALLS under pre-commit: its node_env is 22.14, and
+    # from 0.48 on the cli's devDependency ava (pulled in by pre-commit's
+    # `npm install`) requires node >= 22.20 → EBADENGINE (run 33517947231).
+    rev: v0.47.0
+    hooks:
+      - id: markdownlint
+        # Every markdown this repo authors (README, templates/README,
+        # LICENSE, canary). The .github/ health files (PR / issue
+        # templates, CODE_OF_CONDUCT, …) are GitHub-rendered forms — the
+        # same exclusion the canon copies give consumers.
+        exclude: ^\.github/
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.31.0  # commitizen 4.x requires python >= 3.9
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+  - repo: local
+    hooks:
+      # CMake lint — was a standalone cmake-lint.yml workflow; as a hook it
+      # rides the same channel as every other linter: `make lint` locally and
+      # the diff-scoped code-quality-check gate in CI.
+      - id: cmakelint
+        name: cmakelint
+        entry: cmakelint --linelength=120  # keep in sync with ruff line-length / clang-format ColumnLimit
+        language: python
+        additional_dependencies: [cmakelint==1.4.3]  # same pin as requirements-ci.txt
+        files: (^|/)CMakeLists\.txt$|\.cmake$
+
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        entry: bash -c '[ -f .clang-format ] || { echo "no .clang-format in the repo root (left out via .github/canon-include?) — refusing to format with the fallback style, skipping"; exit 0; }; clang-format -i "$@"' --
+        description: a tool to format C/C++/Obj-C code according to a set of style options
+        # Pinned wheel in the hook's own env — an installed git hook does not
+        # inherit any Makefile venv PATH, and host clang-format versions differ.
+        language: python
+        additional_dependencies: ["clang-format==22.1.8"]
+        pass_filenames: true
+        files: \.(c|cc|cpp|cxx|h|hpp)$
+
+      - id: clang-format-all
+        name: clang-format-all
+        entry: |
+          bash -c '
+            if [ ! -f .clang-format ]; then
+              echo "no .clang-format in the repo root (left out via .github/canon-include?) — skipping"
+              exit 0
+            fi
+            mapfile -t files < <(git ls-files "*.cpp" "*.cc" "*.cxx" "*.h" "*.hpp")
+            if (( ${#files[@]} )); then
+              clang-format -i "${files[@]}"
+            else
+              echo "No C/C++ files to format"
+            fi
+          '
+        language: python
+        additional_dependencies: ["clang-format==22.1.8"]
+        pass_filenames: false          # builds its own list from git ls-files (tracked files only)
+        stages: [manual]
+
+      - id: clang-tidy
+        name: clang-tidy
+        entry: bash -lc 'clang-tidy "$@" --config-file=.clang-tidy -- -std=c++17' --   # trailing -- => $0, so all filenames land in "$@"
+        description: |
+          a clang-based C++ “linter” tool.
+          Its purpose is to provide an extensible framework for diagnosing and fixing typical programming errors,
+          like style violations, interface misuse, or bugs that can be deduced via static analysis
+        language: system
+        pass_filenames: true
+        files: \.(cc|cpp|cxx|h|hpp)$
+        stages: [manual]          # needs system tool (+compile_commands.json for clang-tidy); opt-in, not every commit
+
+      - id: clang-tidy-all
+        name: clang-tidy-all
+        entry: |
+          bash -c 'mapfile -t files < <(git ls-files "*.cpp" "*.cc" "*.cxx" "*.h" "*.hpp");
+          if (( ${#files[@]} )); then
+            for f in "${files[@]}"; do
+              echo "$f" && clang-tidy "$f" --config-file=.clang-tidy -fix -fix-errors -warnings-as-errors=* -- -std=c++17;
+            done;
+          else
+            echo "No C/C++ files to check";
+          fi'
+        language: system
+        stages: [manual]
+
+      - id: cppcheck
+        name: cppcheck
+        entry: bash -lc 'cppcheck --enable=all --inconclusive --std=c++17 --language=c++ --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=unmatchedSuppression "$@"' --
+        description: static analysis of C/C++ code
+        language: system
+        pass_filenames: true
+        files: ^src/.*\.(cc|cpp|cxx|h|hpp)$
+        stages: [manual]          # needs system tool (+compile_commands.json for clang-tidy); opt-in, not every commit
+
+      - id: shellcheck
+        name: shellcheck
+        # Skip ONLY when shellcheck is absent; when present, its exit code must
+        # propagate (the old `&& … || echo` also swallowed real findings).
+        entry: bash -lc 'if command -v shellcheck >/dev/null 2>&1; then shellcheck -x "$@"; else echo "shellcheck not installed, skipping"; fi' --
+        description: gives warnings and suggestions for bash/sh shell scripts
+        language: system
+        pass_filenames: true
+        files: (\.sh$|^scripts/.+\.sh$)
+
+      # ROS-version-aware hooks: each gates itself on the SOURCED ROS env
+      # ($ROS_VERSION), never on a hardcoded distro — one config serves
+      # ROS1, ROS2 and dual repos alike. Outside any ROS env they skip.
+
+      # package.xml / CMake semantics — same tool as the CI catkin-lint job,
+      # run locally before push. ROS1-only: catkin_lint does not understand
+      # ament packages. Owned packages = package.xml at depth <= 2 outside
+      # src/ (same rule as the colcon hook); a repo with none — or with only
+      # vendored trees deeper down — skips instead of linting third-party code.
+      - id: catkin-lint
+        name: catkin_lint
+        # An already-sourced ROS env wins ($ROS_VERSION set); only discover
+        # an installed setup.bash when none is active — sourcing blindly
+        # would overwrite e.g. an active ROS2 env with the first installed
+        # distro and run the wrong lane. Discovery probes each setup in a
+        # subshell and takes the first that yields the version this hook
+        # needs: /opt/ros/* is walked in shell-glob (alphabetical) order,
+        # so on a dual install "jazzy" precedes "noetic" and taking the
+        # first sourceable setup would skip this ROS1-only hook on a host
+        # that does have noetic.
+        entry: bash -c 'if [ -z "${ROS_VERSION:-}" ]; then for s in /opt/ros/*/setup.bash; do ( . "$s" 2>/dev/null; [ "${ROS_VERSION:-}" = 1 ] ) && { . "$s" 2>/dev/null; break; }; done; fi; [ "${ROS_VERSION:-}" = 1 ] || { echo "not a ROS1 env, skipping"; exit 0; }; command -v catkin_lint >/dev/null 2>&1 || { echo "catkin_lint not installed, skipping"; exit 0; }; find . -maxdepth 2 -name package.xml -not -path "./src/*" | grep -q . || { echo "no owned package.xml (depth <= 2) — nothing to lint, skipping"; exit 0; }; catkin_lint --explain .'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+      # Launch sanity — ROS1-only tool (ROS2 launch files are python; ruff
+      # covers them); pre-push because it needs the sourced env.
+      - id: roslaunch-check
+        name: roslaunch-check
+        entry: bash -c 'if [ -z "${ROS_VERSION:-}" ]; then for s in /opt/ros/*/setup.bash; do ( . "$s" 2>/dev/null; [ "${ROS_VERSION:-}" = 1 ] ) && { . "$s" 2>/dev/null; break; }; done; fi; [ "${ROS_VERSION:-}" = 1 ] || { echo "not a ROS1 env, skipping"; exit 0; }; rc=0; for f in "$@"; do roslaunch-check "$f" || rc=1; done; exit $rc' --
+        language: system
+        pass_filenames: true
+        files: \.launch$
+        stages: [pre-push]
+
+      # xacro sanity — any sourced ROS env will do (active one wins).
+      - id: xacro-check
+        name: xacro parse
+        entry: bash -c 'if [ -z "${ROS_VERSION:-}" ]; then for s in /opt/ros/*/setup.bash; do . "$s" 2>/dev/null && break; done; fi; [ -n "${ROS_VERSION:-}" ] || { echo "no ROS env, skipping"; exit 0; }; rc=0; for f in "$@"; do xacro "$f" -o /dev/null || rc=1; done; exit $rc' --
+        language: system
+        pass_filenames: true
+        files: \.xacro$
+        stages: [pre-push]
+
+      # Build (heavy) — runs on `git push`, not on every commit. Source your ROS
+      # env first. Builds this repo's packages plus any sibling checkouts under
+      # src/ they depend on (same base paths as CI); artifacts go to /tmp so the
+      # repo stays clean. With no owned package the hook skips — an empty
+      # --packages-up-to would otherwise build everything the crawl finds,
+      # vendored trees included.
+      - id: colcon-build
+        name: colcon build
+        entry: bash -c 'if [ -z "${ROS_VERSION:-}" ]; then for s in /opt/ros/*/setup.bash; do . "$s" 2>/dev/null && break; done; fi; [ -n "${ROS_VERSION:-}" ] || { echo "no ROS env, skipping"; exit 0; }; pkgs=$(find . -maxdepth 2 -name package.xml -not -path "./src/*" | xargs -r grep -hoPm1 "(?<=<name>)[^<]+" | tr "\n" " "); [ -n "${pkgs// /}" ] || { echo "no owned package.xml (depth <= 2) — nothing to build, skipping"; exit 0; }; colcon build --base-paths . src --packages-up-to $pkgs --build-base "/tmp/colcon-prepush/${PWD##*/}/build" --install-base "/tmp/colcon-prepush/${PWD##*/}/install"'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

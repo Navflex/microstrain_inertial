@@ -1,0 +1,23 @@
+# Repo markdownlint policy.
+# MD013 (line-length 80): off — the engineering docs carry long LaTeX formulas
+#   and tables that cannot be wrapped meaningfully.
+# MD029 (ordered-list prefix): off — numbered steps interleaved with formula
+#   paragraphs read better with explicit 1..N numbering.
+# MD024: duplicate headings allowed in different sections (siblings_only).
+# MD060 (table-column-style, cli >= 0.46 / lib >= 0.39): default "any" — each
+#   table must consistently match aligned, compact, or tight. Not autofixable
+#   at the pinned cli v0.47.0 (lib 0.40 emits no fixInfo); partial fixes for
+#   compact/tight spacing arrive only with lib 0.41 (cli v0.49).
+MD013: false
+MD029: false
+MD024:
+  siblings_only: true
+
+# MD007 (ul-indent): 4, not the markdownlint default of 2. Python-Markdown —
+# the engine behind every mkdocs site in the org — only nests a list item
+# indented by 4 spaces; a 2-space nested item renders as a sibling of its
+# parent. `markdownlint --fix` with the default silently flattened the
+# nested lists of navflex_architecture (20 → 1 on the built site) and
+# navflex_infrastructure docs-site. GitHub renders 4-space nesting too.
+MD007:
+  indent: 4
